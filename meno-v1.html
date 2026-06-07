@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GX 新用户留存与付费优化实践</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,'PingFang SC','Hiragino Sans GB',sans-serif;
+  background:#f3f4f8;color:#1f2937;line-height:1.6;font-size:14px;
+}
+.page{max-width:800px;margin:0 auto;padding:40px 20px 80px}
+
+/* ── Header ── */
+.header{
+  background:#fff;border-radius:20px;padding:36px 40px;
+  margin-bottom:14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.04);
+}
+h1{font-size:24px;font-weight:700;color:#111827;margin-bottom:10px;line-height:1.35}
+.subtitle{font-size:13px;color:#6b7280;line-height:1.75;margin-bottom:26px}
+
+.metrics{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.metric{
+  flex:1;min-width:110px;text-align:center;
+  background:#fafafe;border:1px solid #e8eaf6;border-radius:14px;padding:14px 16px;
+}
+.metric-label{font-size:11px;color:#9ca3af;margin-bottom:6px}
+.metric-val{font-size:22px;font-weight:700;color:#16a34a;letter-spacing:-.5px}
+.metric-val.pending{font-size:13px;color:#c4b5fd;font-weight:500;letter-spacing:.5px}
+
+.insight{
+  background:#eff6ff;border-left:3px solid #3b82f6;
+  border-radius:0 10px 10px 0;padding:12px 16px;
+  font-size:13px;color:#1d4ed8;margin-bottom:20px;line-height:1.7;
+}
+.insight strong{margin-right:5px}
+
+.tag-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.tag-label{font-size:11px;color:#9ca3af;margin-right:2px}
+.tag{font-size:12px;padding:3px 10px;border-radius:20px;background:#ede9fe;color:#6d28d9;font-weight:500}
+
+/* ── Tabs ── */
+.tabs{
+  display:flex;background:#fff;border-radius:14px;padding:5px;
+  margin-bottom:14px;gap:4px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.04);
+}
+.tab{
+  flex:1;padding:10px 8px;text-align:center;font-size:13px;
+  color:#9ca3af;cursor:pointer;border-radius:10px;transition:all .2s;
+  font-weight:500;line-height:1.45;
+}
+.tab.active{background:#5b5ef4;color:#fff}
+.tab:hover:not(.active){background:#f3f4f6;color:#374151}
+
+/* ── Strategy Card ── */
+.card{
+  background:#fff;border-radius:20px;padding:36px 40px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.04);
+  display:none;
+}
+.card.active{display:block}
+
+.s-no{font-size:11px;font-weight:700;letter-spacing:2px;color:#c4b5fd;text-transform:uppercase;margin-bottom:6px}
+.s-title{font-size:21px;font-weight:700;color:#111827;margin-bottom:8px}
+.s-summary{font-size:13px;color:#6b7280;line-height:1.7;margin-bottom:14px}
+.s-result{color:#5b5ef4;font-weight:600}
+
+.s-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px}
+.stag{font-size:11px;padding:2px 9px;border-radius:20px;background:#ede9fe;color:#7c3aed}
+
+/* ── Section Heading ── */
+.sh{
+  display:flex;align-items:center;gap:10px;
+  font-size:10px;font-weight:700;letter-spacing:1.8px;
+  color:#9ca3af;text-transform:uppercase;margin-bottom:14px;
+}
+.sh::after{content:'';flex:1;height:1px;background:#f3f4f6}
+
+/* ── Pain Point ── */
+.pain{
+  background:#fffbeb;border:1px solid #fde68a;border-radius:10px;
+  padding:14px 16px;font-size:13px;color:#78350f;line-height:1.7;margin-bottom:26px;
+}
+
+/* ── Steps ── */
+.steps{display:flex;flex-direction:column;gap:18px;margin-bottom:26px}
+.step{display:flex;gap:14px}
+.step-n{
+  width:26px;height:26px;border-radius:50%;background:#5b5ef4;color:#fff;
+  font-size:12px;font-weight:700;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.step-t{font-size:14px;font-weight:600;color:#111827;margin-bottom:5px}
+.step-d{font-size:13px;color:#6b7280;line-height:1.7}
+.step-d ul{margin:6px 0 0 16px}
+.step-d li{margin-bottom:3px}
+
+/* ── Formula ── */
+.formula{
+  background:#1e1e2e;border-radius:10px;padding:14px 18px;margin:10px 0;
+  font-family:'Courier New',monospace;font-size:12.5px;color:#cdd6f4;line-height:2;
+}
+.fg{color:#a6e3a1}.fy{color:#f9e2af}.fc{color:#89b4fa}.fgr{color:#6c7086}
+
+/* ── Table ── */
+.dt{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+.dt th{background:#f9fafb;padding:8px 12px;text-align:left;font-weight:600;color:#374151;border-bottom:2px solid #e5e7eb;font-size:12px}
+.dt td{padding:8px 12px;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top}
+.dt tr:last-child td{border-bottom:none}
+
+.tier{font-size:11px;padding:1px 7px;border-radius:4px;font-weight:600;white-space:nowrap}
+.t-b{background:#dcfce7;color:#166534}
+.t-m{background:#dbeafe;color:#1e40af}
+.t-e{background:#fce7f3;color:#9d174d}
+
+/* ── A/B Compare ── */
+.ab-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0;align-items:stretch}
+.ab-col{background:#f9fafb;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column}
+.ab-head{font-size:12px;font-weight:700;color:#374151;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.ab-badge{font-size:10px;padding:1px 7px;border-radius:4px;font-weight:700}
+.ab-blue{background:#dbeafe;color:#1e40af}
+.ab-green{background:#dcfce7;color:#166534}
+.ab-body{font-size:12px;color:#6b7280;line-height:1.65}
+.ab-risk{margin-top:7px;font-size:11px;color:#ef4444}
+
+.rule-box{
+  background:#f9fafb;border-radius:8px;padding:11px 14px;
+  margin-top:10px;font-size:12px;color:#374151;line-height:1.6;
+}
+
+/* ── PFM ── */
+.pfm-bad{
+  background:#fff1f2;border:1px solid #fecaca;border-radius:8px;
+  padding:10px 14px;font-size:12px;color:#991b1b;margin-bottom:8px;
+  display:flex;gap:7px;align-items:baseline;
+}
+.pfm-good{
+  background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;
+  padding:12px 16px;font-size:12px;color:#166534;
+}
+.pfm-good-title{font-weight:600;font-size:13px;margin-bottom:9px}
+.pfm-row{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.pfm-arrow{color:#86efac;font-size:15px}
+
+/* ── Implementation ── */
+.impl{display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+.impl-row{display:flex;gap:10px;align-items:flex-start}
+.impl-badge{
+  font-size:11px;font-weight:700;color:#5b5ef4;background:#eef2ff;
+  padding:2px 8px;border-radius:5px;white-space:nowrap;margin-top:2px;flex-shrink:0;
+}
+.impl-text{font-size:13px;color:#6b7280;line-height:1.65}
+
+/* ── Ordered Steps ── */
+.o-steps{display:flex;flex-direction:column;gap:9px;margin-bottom:26px}
+.o-step{display:flex;gap:10px;align-items:flex-start}
+.o-no{
+  width:22px;height:22px;border-radius:6px;background:#f3f4f6;
+  color:#6b7280;font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.o-text{font-size:13px;color:#6b7280;line-height:1.65}
+.o-text strong{color:#374151}
+
+/* ── Growth Chain ── */
+.growth{
+  background:#f0fdf4;border-radius:10px;padding:14px 18px;
+  margin-bottom:26px;font-size:13px;
+}
+.g-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.g-row+.g-row{margin-top:8px;padding-top:8px;border-top:1px solid #bbf7d0}
+.g-label{font-size:10px;font-weight:700;color:#86efac;letter-spacing:1px;margin-right:4px}
+.g-item{color:#166634;font-weight:500}
+.g-arrow{color:#86efac;font-size:16px}
+.g-end{color:#15803d;font-weight:700}
+
+/* ── Bottom Grid ── */
+.divider{height:1px;background:#f3f4f6;margin:24px 0}
+.bot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:stretch}
+.bot-box{background:#f9fafb;border-radius:12px;padding:16px;display:flex;flex-direction:column}
+.bot-head{
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:9px;
+  display:flex;align-items:center;gap:5px;
+}
+.ic-g{color:#10b981}.ic-o{color:#f59e0b}.ic-b{color:#6366f1}
+.bot-body{font-size:12px;color:#6b7280;line-height:1.85}
+.bot-body li{list-style:none;display:flex;gap:5px;align-items:baseline;margin-bottom:1px}
+.dot{width:4px;height:4px;border-radius:50%;background:#d1d5db;flex-shrink:0;margin-top:7px}
+
+/* ── Diagnosis Card ── */
+.diag-card{
+  background:#fff;border-radius:20px;padding:24px 40px;
+  margin-bottom:14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.04);
+}
+.diag-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.diag-item{
+  background:#f9fafb;border-radius:12px;padding:16px;
+  border-top:2.5px solid;
+}
+.diag-item:nth-child(1){border-top-color:#3b82f6}
+.diag-item:nth-child(2){border-top-color:#0284c7}
+.diag-item:nth-child(3){border-top-color:#0891b2}
+.diag-num{font-size:10px;font-weight:700;color:#60a5fa;letter-spacing:1px;margin-bottom:5px}
+.diag-t{font-size:13px;font-weight:600;color:#111827;margin-bottom:5px}
+.diag-d{font-size:12px;color:#6b7280;line-height:1.65}
+
+/* ── Reasoning Chain ── */
+.reasoning{
+  background:#f0f7ff;border-radius:12px;padding:16px;
+  margin-bottom:26px;
+  display:grid;grid-template-columns:1fr 22px 1fr 22px 1fr;
+  align-items:center;
+}
+.r-node{
+  background:#fff;border-radius:10px;padding:13px 14px;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+.r-label{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:5px;
+}
+.rl-data{color:#3b82f6}
+.rl-hyp{color:#f59e0b}
+.rl-str{color:#7c3aed}
+.r-text{font-size:12px;color:#374151;line-height:1.6}
+.r-arrow{text-align:center;color:#94a3b8;font-size:18px}
+
+@media(max-width:600px){
+  .header,.card{padding:24px 20px}
+  .metrics{flex-direction:column}
+  .ab-grid{grid-template-columns:1fr}
+  .bot{grid-template-columns:1fr}
+  .tab{font-size:11px;padding:8px 4px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ════ HEADER ════ -->
+<div class="header">
+  <h1>GX 新用户留存与付费优化实践</h1>
+  <p class="subtitle">针对新用户付费转化低、Day1–Day2 流失明显等问题，系统拆解三条策略主线：<br>分发体系重构 · 输入门槛分层设计 · 商业化卡点测试</p>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">新用户次日留存</div>
+      <div class="metric-val">+6.23%</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">新用户次日付费转化率</div>
+      <div class="metric-val">+3.47%</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">日均销售净额</div>
+      <div class="metric-val">+3.13%</div>
+    </div>
+  </div>
+
+  <div class="insight">
+    <strong>数据洞察</strong>通过场景流量 × 使用频次相关性分析、用户路径漏斗节点拆解、付费归因测试，发现曝光错配、展示&点击断点流失、商业化卡点不明的数据问题，推导三条可量化策略主线，最终指向新用户 Day1 留存与付费转化的系统提升。
+  </div>
+
+  <div class="tag-row">
+    <span class="tag-label">方法论</span>
+    <span class="tag">推荐算法内容分发优化</span>
+    <span class="tag">行为信号加权排序</span>
+    <span class="tag">Prompt结构化设计</span>
+    <span class="tag">用户分层引导</span>
+    <span class="tag">商业化A/B测试</span>
+  </div>
+</div>
+
+<!-- ════ DIAGNOSIS CARD ════ -->
+<div class="diag-card">
+  <div class="sh">问题定位框架</div>
+  <div class="diag-grid">
+    <div class="diag-item">
+      <div class="diag-num">01</div>
+      <div class="diag-t">流量分布诊断</div>
+      <div class="diag-d">将场景流量分布与使用频次交叉对比，识别"高曝光 ≠ 高需求"的结构化偏差场景</div>
+    </div>
+    <div class="diag-item">
+      <div class="diag-num">02</div>
+      <div class="diag-t">行为路径诊断</div>
+      <div class="diag-d">将用户路径拆成独立节点逐层分析，定位'制作点击率'&'结果生成率'两大转化流失节点</div>
+    </div>
+    <div class="diag-item">
+      <div class="diag-num">03</div>
+      <div class="diag-t">商业化卡点诊断</div>
+      <div class="diag-d">拉出付费漏斗，发现功能&模板场景整体付费成功率偏低，新用户首次付费转化不足</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TABS ════ -->
+<div class="tabs">
+  <div class="tab active" onclick="sw(0)">策略一<br>内容分发重构</div>
+  <div class="tab" onclick="sw(1)">策略二<br>Prompt结构化设计</div>
+  <div class="tab" onclick="sw(2)">策略三<br>商业化卡点AB测试</div>
+</div>
+
+<!-- ════ CARD 1 ════ -->
+<div class="card active" id="c0">
+  <div class="s-no">Strategy 01</div>
+  <div class="s-title">模版分发体系优化</div>
+  <div class="s-summary">通过场景化导航重构 + 行为信号自动排序算法，解决生图类内容曝光不足问题，上线后<span class="s-result">首页各模块点击率与功能人均使用频次显著提升</span></div>
+
+  <div class="s-tags">
+    <span class="stag">推荐算法</span><span class="stag">内容分发优化</span><span class="stag">场景化标签设计</span><span class="stag">行为信号加权排序</span>
+  </div>
+
+  <div class="sh">痛点洞察</div>
+  <div class="pain">
+    首页内容流量分布与使用频次呈负相关，其中生图类场景曝光显著不足，导致用户进入首页后未触发制作行为即流失。当前分发机制是按功能类型而非使用场景组织。
+  </div>
+
+  <div class="sh">策略推导逻辑</div>
+  <div class="reasoning">
+    <div class="r-node">
+      <div class="r-label rl-data">数据观察</div>
+      <div class="r-text">各场景流量分布与使用频次负相关——生图类曝光占比高，但用户实际使用少</div>
+    </div>
+    <div class="r-arrow">→</div>
+    <div class="r-node">
+      <div class="r-label rl-hyp">归因假设</div>
+      <div class="r-text">分发按功能类型组织，与用户真实使用场景不匹配</div>
+    </div>
+    <div class="r-arrow">→</div>
+    <div class="r-node">
+      <div class="r-label rl-str">策略选择</div>
+      <div class="r-text">场景化重构分发，以行为信号代替人工排序，可量化可迭代</div>
+    </div>
+  </div>
+
+  <div class="sh">策略设计</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <div class="step-body">
+        <div class="step-t">场景化重构导航</div>
+        <div class="step-d">内容按用户使用意图拆为三类：Video / Photo / UGC，对应下发不同素材类型；一级导航升级为 Discover → Templates → AI tools → Rewards</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <div class="step-body">
+        <div class="step-t">行为信号排序算法</div>
+        <div class="step-d">
+          <div class="formula">
+<span class="fg">整体得分</span> = <span class="fc">λ</span> × <span class="fy">热门得分</span>
+<span class="fy">热门得分</span> = （试用渗透率 × W1）+ （保存渗透率 × （1-W1））
+<span class="fgr">λ = 时间衰减因子（控制内容新鲜度），W1初始值0.6，可基于情况调参</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <div class="step-body">
+        <div class="step-t">新内容冷启动保护</div>
+        <div class="step-d">
+          <table class="dt">
+            <tr><th>阶段</th><th>机制</th></tr>
+            <tr><td>上线 24h 内</td><td>不参与正式排序，按上传时间倒序</td></tr>
+            <tr><td>第 2–3 天</td><td>给予 20% 曝光加权，保障最低曝光基础</td></tr>
+            <tr><td>每日 0 点</td><td>自动重算，首位优先级 10000，每位递减 10</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">4</div>
+      <div class="step-body">
+        <div class="step-t">ERP 后台标签管理系统</div>
+        <div class="step-d">打通素材上新 → 标签关联 → 排序配置全流程；运营可在后台配置子标签优先级，支持新老用户差异化内容投放，无需前端发版即可调整分发策略</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sh">落地分工</div>
+  <div class="impl">
+    <div class="impl-row"><span class="impl-badge">前端</span><span class="impl-text">重构首页导航结构，按场景意图分类下发内容；接入行为信号排序算法，设定自动重算周期</span></div>
+    <div class="impl-row"><span class="impl-badge">运营</span><span class="impl-text">在 ERP 后台建立素材标签体系，配置子标签优先级与新老用户差异化投放策略；持续迭代参数权重</span></div>
+    <div class="impl-row"><span class="impl-badge">数据</span><span class="impl-text">监控各场景点击率、试用/保存渗透率趋势，作为算法参数调优依据</span></div>
+  </div>
+
+  <div class="sh">增长链路</div>
+  <div class="growth">
+    <div class="g-row">
+      <span class="g-item">分发效率↑</span><span class="g-arrow">→</span>
+      <span class="g-item">首页找到感兴趣内容</span><span class="g-arrow">→</span>
+      <span class="g-item">点击进入制作</span><span class="g-arrow">→</span>
+      <span class="g-item">完成核心使用动作</span><span class="g-arrow">→</span>
+      <span class="g-end">Day1 留存↑</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="bot">
+    <div class="bot-box">
+      <div class="bot-head"><span class="ic-g">✓</span> 适用场景</div>
+      <div class="bot-body">
+        <li><span class="dot"></span>内容池 &gt;100 条可排序内容</li>
+        <li><span class="dot"></span>多种内容类型共存</li>
+        <li><span class="dot"></span>当前依赖人工排序或时间倒序</li>
+      </div>
+    </div>
+    <div class="bot-box">
+      <div class="bot-head"><span class="ic-o">⚠</span> 风险提示</div>
+      <div class="bot-body">
+        <li><span class="dot"></span>内容池过小冷启动保护放大噪音</li>
+        <li><span class="dot"></span>权重参数需根据业务发展持续调参</li>
+        <li><span class="dot"></span>标签划分过细导致各标签内容稀疏</li>
+      </div>
+    </div>
+    <div class="bot-box">
+      <div class="bot-head"><span class="ic-b">◎</span> 过程指标</div>
+      <div class="bot-body">
+        <li><span class="dot"></span>各场景模版点击率分布</li>
+        <li><span class="dot"></span>新素材首周曝光量</li>
+        <li><span class="dot"></span>素材使用 vs 保存渗透率</li>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CARD 2 ════ -->
+<div class="card" id="c1">
+  <div class="s-no">Strategy 02</div>
+  <div class="s-title">Prompt输入结构化分层设计</div>
+  <div class="s-summary">通过将自由文本输入结构化为多维表单 + 分层Hints，降低新用户制作门槛，结果生成率显著提升，<span class="s-result">生图功能人均积分消耗+37.8%</span></div>
+
+  <div class="s-tags">
+    <span class="stag">Prompt结构化设计</span><span class="stag">用户分层引导</span><span class="stag">渐进式信息披露</span>
+  </div>
+
+  <div class="sh">痛点洞察</div>
+  <div class="pain">
+    用户关键行为转化率流失较大，制作点击率与结果生成率为新用户转化路径中的两大主要断点。
+  </div>
+
+  <div class="sh">推导逻辑</div>
+  <div class="reasoning">
+    <div class="r-node">
+      <div class="r-label rl-data">数据观察</div>
+      <div class="r-text">"制作点击率"与"生成率"双低——连续两级漏斗断点，流失集中在输入环节</div>
+    </div>
+    <div class="r-arrow">→</div>
+    <div class="r-node">
+      <div class="r-label rl-hyp">归因假设</div>
+      <div class="r-text">用户知道想要什么，但无法清晰表达——障碍在输入侧，不在生成侧</div>
+    </div>
+    <div class="r-arrow">→</div>
+    <div class="r-node">
+      <div class="r-label rl-str">策略选择</div>
+      <div class="r-text">结构化表达而非削减功能，保留深度的同时分层降低门槛</div>
+    </div>
+  </div>
+
+  <div class="sh">策略设计</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <div class="step-body">
+        <div class="step-t">Prompt 结构化设计</div>
+        <div class="step-d">
+          将开放式文本输入拆解为维度化结构，降低用户表达成本：
+          <div class="formula" style="margin-top:10px">
+<span class="fg">主体 + 动作</span> <span class="fgr">（必填）</span>  一个女孩戴着钻石皇冠优雅地旋转
+<span class="fy">场景</span>         <span class="fgr">（选填）</span>  一间有大窗户的明亮芭蕾舞教室
+<span class="fgr">光线 / 情绪  （进阶选填）</span>  温暖逆光，梦幻感（可扩展参数）</div>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <div class="step-body">
+        <div class="step-t">写真 AI Agent 功能化</div>
+        <div class="step-d">
+          通过样片结构化解析，输出含风格、姿势、服饰、布景维度的可编辑 Prompt，结合用户照片生成定制化写真。将复杂多步操作封装为 Agent，大幅降低专业用户门槛。
+          <div class="pfm-good" style="margin-top:10px">
+            <div class="pfm-row"><span class="pfm-arrow">→</span><span>上传样片 → 结构化解析（风格 / 姿势 / 服饰 / 布景）</span></div>
+            <div class="pfm-row"><span class="pfm-arrow">→</span><span>输出可编辑 Prompt，用户可微调各维度</span></div>
+            <div class="pfm-row"><span class="pfm-arrow">→</span><span>结合用户照片 → 一键生成定制化写真</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <div class="step-body">
+        <div class="step-t">分层 Hints 运营策略</div>
+        <div class="step-d">
+          三种入口是同一生成流程的不同深度，而非三套独立产品：
+          <table class="dt" style="margin-top:10px">
+            <tr><th>用户类型</th><th>方案</th><th>路径</th></tr>
+            <tr><td><span class="tier t-b">小白</span></td><td>预设 Hints → 一键生成</td><td>选预设 → 自动生成 → 预览导出</td></tr>
+            <tr><td><span class="tier t-m">中级</span></td><td>Prompt 维度化（主体 / 场景 / 光线）</td><td>选预设 → 编辑结构化参数 → 迭代</td></tr>
+            <tr><td><span class="tier t-e">高阶</span></td><td>AI Agent：样片解析 → Prompt 可编辑</td><td>上传样片 → 解析维度 → 自定义生成</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sh">落地分工</div>
+  <div class="impl">
+    <div class="impl-row"><span class="impl-badge">产品/前端</span><span class="impl-text">将输入界面改为结构化维度，设计小白/中级/高阶三层入口</span></div>
+    <div class="impl-row"><span class="impl-badge">运营</span><span class="impl-text">建立预设Hints内容库，根据生成满意率持续迭代；观察各维度填写率识别优化信号</span></div>
+  </div>
+
+  <div class="sh">增长链路</div>
+  <div class="growth">
+    <div class="g-row">
+      <span class="g-item">输入门槛↓</span><span class="g-arrow">→</span>
+      <span class="g-item">新用户首次生成成功</span><span class="g-arrow">→</span>
+      <span class="g-item">完成"Aha Moment"</span><span class="g-arrow">→</span>
+      <span class="g-end">Day1留存↑</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="bot">
+    <div class="bot-box">
+      <div class="bot-head"><span class="ic-g">✓</span> 适用场景</div>
+      <div class="bot-body">
+        <li><span class="dot"></span>AI创作类，用Prompt驱动生成</li>
+        <li><span class="dot"></span>流失发生在"尝试生成"之前</li>
+        <li><span class="dot"></span>用户群存在明显小白与高阶分层</li>
+      </div>
+    </div>
+    <div class="bot-box">
+      <div class="bot-head"><span class="ic-o">⚠</span> 风险提示</div>
+      <div class="bot-body">
+        <li><span class="dot"></span>Hints质量决定小白首次体验，需持续运营</li>
+        <li><span class="dot"></span>维度过细易变成强制填表，反增门槛</li>
+        <li><span class="dot"></span>AI Agent开发成本较高，适合高频垂直场景</li>
+      </div>
+    </div>
+    <div class="bot-box">
+      <div class="bot-head"><span class="ic-b">◎</span> 过程指标</div>
+      <div class="bot-body">
+        <li><span class="dot"></span>新用户首次生成成功率</li>
+        <li><span class="dot"></span>预设Hints人均使用率 vs 自定义输入比例</li>
+        <li><span class="dot"></span>人均积分消耗</li>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ CARD 3 ════ -->
+<div class="card" id="c2">
+  <div class="s-no">Strategy 03</div>
+  <div class="s-title">商业化卡点测试付费墙位置 + 免费试用精准化</div>
+  <div class="s-summary">通过付费墙前/后置A/B 测试 + 精准免费试用策略，定位最优转化时机，<span class="s-result">T3国家（菲律宾）付费转化率提升13.8%，ARPU+23%</span></div>
+
+  <div class="s-tags">
+    <span class="stag">商业化A/B测试</span><span class="stag">免费试用设计</span><span class="stag">付费转化机制</span>
+  </div>
+
+  <div class="sh">痛点洞察</div>
+  <div class="pain">
+    功能及模板的整体付费转化率偏低，新用户首购贡献不足。
+  </div>
+
+  <div class="sh">推导逻辑</div>
+  <div class="reasoning">
+    <div class="r-node">
+      <div class="r-label rl-data">数据观察</div>
+      <div class="r-text">付费成功率偏低，但仅凭数据无法判断根因在哪一环节</div>
+    </div>
+    <div class="r-arrow">→</div>
+    <div class="r-node">
+      <div class="r-label rl-hyp">归因假设</div>
+      <div class="r-text">两个独立假设：① 付费时机不对　② 免费试用资源分配低效</div>
+    </div>
+    <div class="r-arrow">→</div>
+    <div class="r-node">
+      <div class="r-label rl-str">策略选择</div>
+      <div class="r-text">两个假设分别测试，不混变量；三维联动评估，以 LTV 为最终判据</div>
+    </div>
+  </div>
+
+  <div class="sh">策略设计</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <div class="step-body">
+        <div class="step-t">付费墙前置 vs 后置A/B 测试</div>
+        <div class="step-d">
+          <div class="ab-grid">
+            <div class="ab-col">
+              <div class="ab-head"><span class="ab-badge ab-blue">前置</span>使用前出现付费墙</div>
+              <div class="ab-body">短路径，高意图用户直接转化</div>
+              <div class="ab-risk">⚠ 未建立价值感知，新用户流失率高</div>
+            </div>
+            <div class="ab-col">
+              <div class="ab-head"><span class="ab-badge ab-green">后置</span>体验后触发付费引导</div>
+              <div class="ab-body">先建立价值认知，转化更自然</div>
+              <div class="ab-risk">⚠ 可能损失高意图用户的即时转化</div>
+            </div>
+          </div>
+          <div class="rule-box">
+            <strong>胜出规则</strong>：付费率 + ARPPU + 次日留存三维同向改善才算方案赢；出现分裂信号时以 LTV 估算为最终判据
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <div class="step-body">
+        <div class="step-t">免费试用分层策略</div>
+        <div class="step-d">
+          <div class="pfm-bad"><span>✕</span><span>传统做法：所有新用户默认获得免费试用，成本高，稀释付费转化</span></div>
+          <div class="pfm-good">
+            <div class="pfm-good-title">✓ Predictive Free trial Mechanism</div>
+            <div class="pfm-row"><span class="pfm-arrow">→</span><span>监测流失信号（使用频次下降 / 关键行为中断）</span></div>
+            <div class="pfm-row"><span class="pfm-arrow">→</span><span>流失节点前推送免费试用弹窗</span></div>
+            <div class="pfm-row"><span class="pfm-arrow">→</span><span>重激活付费意愿</span></div>
+            <div class="pfm-row"><span class="pfm-arrow">→</span><span>延长生命周期，提升LTV</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sh">落地分工</div>
+  <div class="o-steps">
+    <div class="o-step"><div class="o-no">②</div><div class="o-text"><strong>前端实现</strong>：前置 = 点击功能时弹窗；后置 = 结果页触发引导；免费试用 = 设定流失触发条件</div></div>
+    <div class="o-step"><div class="o-no">③</div><div class="o-text"><strong>运营配置</strong>：弹窗文案突出产品价值；到期前推送转化提醒</div></div>
+    <div class="o-step"><div class="o-no">④</div><div class="o-text"><strong>数据跟踪</strong>：三维指标同时监控；额外追踪'免费试用'触达后复访率和付费激活率</div></div>
+  </div>
+
+  <div class="sh">增长链路</div>
+  <div class="growth">
+    <div class="g-row">
+      <span class="g-label">后置</span>
+      <span class="g-item">价值感知后付费</span><span class="g-arrow">→</span>
+      <span class="g-item">D1 付费转化↑</span>
+    </div>
+    <div class="g-row">
+      <span class="g-label">免费试用</span>
+      <span class="g-item">精准识别流失信号</span><span class="g-arrow">→</span>
+      <span class="g-item">流失前重激活</span><span class="g-arrow">→</span>
+      <span class="g-end">LTV↑</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="bot">
+    <div class="bot-box">
+      <div class="bot-head"><span class="ic-g">✓</span> 适用场景</div>
+      <div class="bot-body">
+        <li><span class="dot"></span>已有基础付费数据，转化优化阶段</li>
+        <li><span class="dot"></span>用户量足够支撑A/B测试</li>
+      </div>
+    </div>
+    <div class="bot-box">
+      <div class="bot-head"><span class="ic-o">⚠</span> 风险提示</div>
+      <div class="bot-body">
+        <li><span class="dot"></span>测试结论强依赖品类，不跨产品迁移</li>
+        <li><span class="dot"></span>三维判断须设定最小显著性阈值</li>
+        <li><span class="dot"></span>PFM 触达时机比内容更关键</li>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+function sw(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
+  document.querySelectorAll('.card').forEach((c,j)=>c.classList.toggle('active',i===j));
+}
+</script>
+</body>
+</html>
